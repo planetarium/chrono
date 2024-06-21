@@ -81,9 +81,9 @@ export async function getAvatars(
 
 export async function getTip(network: string): Promise<number> {
 	const resp = await fetchAPI<{
-		index: number;
-	}>(`${network}/tip`, {
+		latestBlockIndex: number;
+	}>(`${network}/metadata?pollerType=DiffBlockPoller`, {
 		headers: { accept: "application/json" },
 	});
-	return resp.index;
+	return resp.latestBlockIndex;
 }
