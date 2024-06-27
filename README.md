@@ -1,54 +1,45 @@
 # The Wallet for Nine Chronicles
 
-> [!WARNING]
-> This project is unstable yet. You may need to remove all extension data.
+This is a crypto wallet service of chrome extension for Nine Chronicles blockchain, designed to provide users with a seamless experience in managing their assets on the Nine Chronicles blockchain.
 
-This is a crypto wallet service of chrome extension for Nine Chronicles blockchain.
+## Stability Notice
 
-Chrono SDK Document
-https://chrono-docs.pages.dev/
+This project is intended for development and experimental use, so users are advised to be cautious when using this extension and to back up their private keys regularly.
+
+## Chrono SDK
+
+The project provides the Chrono SDK to interact with the Nine Chronicles blockchain. For more information on the SDK, visit the [Chrono SDK Document](https://jsr.io/@planetarium/chrono-sdk/doc).
 
 ## Project Structure
 
-- /background
-  - Implements the background context of the chrome extension. This is where important data storage and operations are executed.
-- /popup
-  - Implement popup UI for chrome extension. It is responsible for receiving user actions and communicating with the background context.
-- /extension
-  - This is where you handle the manifest settings and final build of your chrome extension.
-- /examples
-  -
+- [`/background`](./background): Implements the background service worker of the chrome extension. This is where important data storage and operations are executed.
+- [`/popup`](./popup): Implements the popup UI for the chrome extension. It is responsible for receiving user actions and communicating with the background context.
+- [`/packages/chrono-sdk`](./packages/chrono-sdk/): Implements the `jsr:@planetarium/chrono-sdk` package which provides `ChronoWallet` class to communicate with background context, and several hooks to use the `ChronoWallet` as React hooks easily.
+- [`/extension`](./extension): Handles the manifest settings.
+- [`/examples`](./examples): Contains example applications and use cases demonstrating how to use the wallet in various scenarios.
 
-## Test coverage
-- background
-  - In this place, the main wallet data is stored, and the operation is performed by restoring it. Therefore, tests are performed on the corresponding major operations.
-  - https://htmlpreview.github.io/?https://github.com/tx0x/chrono/blob/main/background/coverage/lcov-report/index.html
-- popup
-  - Since UI implementation is the main focus here, we test whether the UI works normally.
-  - https://htmlpreview.github.io/?https://github.com/tx0x/chrono/blob/main/popup/coverage/lcov-report/index.html
+## Getting Started
 
-## Getting started
+### 1. Clone the Project
 
-### 1. Pull this project to local
-
-```
+```sh
 git clone https://github.com/planetarium/chrono
 cd chrono
 pnpm install
 ```
 
-### 2. Build
+### 2. Build the Project
 
-```
+```sh
 pnpm build
 ```
 
-### 3. Import chrome extension for development
+### 3. Import Chrome Extension for Development
 
-- open `chrome://extensions` on chrome
-- Load the unzipped extension.
-- select ~/chrono/extension
+- Open `chrome://extensions` in Chrome.
+- Enable Developer Mode.
+- Click on "Load unpacked" and select the `~/chrono/build` directory.
 
 ## License
 
-GPL-3.0
+This project is licensed under the GPL-3.0 license.

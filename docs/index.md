@@ -12,7 +12,7 @@ hero:
       link: /user/install
     - theme: alt
       text: API
-      link: /developer/api
+      link: https://jsr.io/@planetarium/chrono-sdk/doc
     - theme: alt
       text: Examples
       link: /developer/examples
