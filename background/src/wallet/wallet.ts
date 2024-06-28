@@ -19,7 +19,7 @@ import {
 import * as ethers from "ethers";
 import { Address } from "@planetarium/account";
 import Decimal from "decimal.js";
-import { encodeSignedTx, encodeUnsignedTx, signTx } from "@planetarium/tx";
+import { UnsignedTx, encodeSignedTx, encodeUnsignedTx, signTx } from "@planetarium/tx";
 import {
 	APPROVAL_REQUESTS,
 	CONNECTED_SITES,
@@ -33,6 +33,7 @@ import { Buffer } from "buffer";
 import { PopupController } from "../controllers/popup";
 import { NetworkController } from "../controllers/network";
 import { ConfirmationController } from "../controllers/confirmation";
+import { MEAD, NCG, TransferAsset, fav } from "@planetarium/lib9c";
 
 interface SavedTransactionHistory {
 	id: string;
@@ -194,31 +195,31 @@ export default class Wallet {
 			throw "Invalid Nonce";
 		}
 
-		const senderEncryptedWallet = await this.storage.secureGet(
-			ENCRYPTED_WALLET + sender.toLowerCase(),
-		);
 		const wallet = await this.loadWallet(sender, resolve(this.passphrase));
-		const utxBytes = Buffer.from(
-			await this.api.unsignedTx(
-				wallet.publicKey.slice(2),
-				await this.api.getTransferAsset(
-					wallet.address,
-					receiver,
-					amount.toString(),
-				),
-				nonce,
-			),
-			"hex",
-		);
-
 		const account = RawPrivateKey.fromHex(wallet.privateKey.slice(2));
-		const signature = (await account.sign(utxBytes)).toBytes();
-		const utx = decode(utxBytes) as BencodexDictionary;
-		const signedTx = new BencodexDictionary([
-			...utx,
-			[new Uint8Array([0x53]), signature],
-		]);
-		const encodedHex = Buffer.from(encode(signedTx)).toString("hex");
+		const currentNetwork = await this.networkController.getCurrentNetwork();
+		const genesisHash = Buffer.from(currentNetwork.genesisHash, "hex");
+		const action = new TransferAsset({
+			sender: Address.fromHex(sender, true),
+			recipient: Address.fromHex(receiver, true),
+			amount: fav(NCG, amount),
+			memo,
+		});
+
+		const unsignedTx: UnsignedTx = {
+			signer: sender.toBytes(),
+			actions: [action.bencode()],
+			updatedAddresses: new Set([]),
+			nonce: BigInt(nonce),
+			genesisHash,
+			publicKey: (await account.getPublicKey()).toBytes("uncompressed"),
+			timestamp: new Date(),
+			maxGasPrice: fav(MEAD, 1),
+			gasLimit: 4n,
+		};
+
+		const signedTx = await signTx(unsignedTx, account);
+		const encodedHex = Buffer.from(encode(encodeSignedTx(signedTx))).toString("hex");
 		const { txId, endpoint } = await this.api.stageTx(encodedHex);
 
 		return { txId, endpoint };
@@ -285,16 +286,7 @@ export default class Wallet {
 					genesisHash,
 					publicKey: (await account.getPublicKey()).toBytes("uncompressed"),
 					timestamp: new Date(),
-					maxGasPrice: {
-						currency: {
-							ticker: "Mead",
-							decimalPlaces: 18,
-							minters: null,
-							totalSupplyTrackable: false,
-							maximumSupply: null,
-						},
-						rawValue: BigInt(Decimal.pow(10, 18).toString()),
-					},
+					maxGasPrice: fav(MEAD, 1),
 					gasLimit,
 				};
 

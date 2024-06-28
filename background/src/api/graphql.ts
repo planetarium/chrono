@@ -6,6 +6,11 @@ import {
 	Network,
 	NetworkId,
 } from "../constants/constants";
+import { UnsignedTx } from "@planetarium/tx";
+import { Buffer } from "buffer";
+import { decode } from "@planetarium/bencodex";
+import { Address, PublicKey } from "@planetarium/account";
+import Decimal from "decimal.js";
 
 async function getLastBlockIndex(endpoint: string) {
 	const response = await fetch(endpoint, {
@@ -76,7 +81,6 @@ export default class Graphql {
 			"getBalance",
 			"getTransactionStatus",
 			"getNextTxNonce",
-			"getTransferAsset",
 		];
 	}
 	canCallExternal(method: string) {
@@ -153,70 +157,6 @@ export default class Graphql {
 
 			const data = await response.json();
 			return data["data"]["transaction"]["nextTxNonce"];
-		});
-	}
-
-	async unsignedTx(
-		publicKey: string,
-		plainValue: string,
-		nonce: number,
-	): Promise<string> {
-		const maxGasPrice = {
-			quantity: 1,
-			ticker: "Mead",
-			decimalPlaces: 18,
-		};
-		return this.callEndpoint(async (endpoint) => {
-			const response = await fetch(endpoint, {
-				method: "POST",
-				body: JSON.stringify({
-					variables: {
-						publicKey: publicKey,
-						plainValue: plainValue,
-						nonce: nonce,
-						maxGasPrice: maxGasPrice,
-					},
-					query: `
-                      query unsignedTx($publicKey: String!, $plainValue: String!, $nonce: Long, $maxGasPrice: FungibleAssetValueInputType) {
-                        transaction {
-                          unsignedTransaction(publicKey: $publicKey, plainValue: $plainValue nonce: $nonce, maxGasPrice: $maxGasPrice)
-                        }
-                      }
-                    `,
-				}),
-				headers: [
-					['content-type', 'application/json']
-				]
-			});
-			const data = await response.json();
-			return data["data"]["transaction"]["unsignedTransaction"];
-		});
-	}
-
-	async getTransferAsset(
-		sender: string,
-		receiver: string,
-		amount: string,
-	): Promise<string> {
-		return this.callEndpoint(async (endpoint) => {
-			const response = await fetch(endpoint, {
-				method: "POST",
-				body: JSON.stringify({
-					variables: { sender: sender, receiver: receiver, amount: amount },
-					query: `
-                    query getTransferAsset($sender: Address!, $receiver: Address!, $amount: String!){
-                      actionQuery {
-                        transferAsset(sender: $sender, recipient: $receiver, currency: NCG, amount: $amount)
-                      }
-                    }
-                  `,
-				}),
-				headers: [
-					['content-type', 'application/json']
-				]
-			});
-			const data = await response.json();
-			return data["data"]["actionQuery"]["transferAsset"];
 		});
 	}
 
