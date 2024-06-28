@@ -34,6 +34,7 @@ import { PopupController } from "../controllers/popup";
 import { NetworkController } from "../controllers/network";
 import { ConfirmationController } from "../controllers/confirmation";
 import { MEAD, NCG, TransferAsset, fav } from "@planetarium/lib9c";
+import { ConnectionController } from "../controllers/connection";
 
 interface SavedTransactionHistory {
 	id: string;
@@ -56,6 +57,7 @@ export default class Wallet {
 	private readonly popup: PopupController;
 	private readonly networkController: NetworkController;
 	private readonly confirmationController: ConfirmationController;
+	private readonly connectionController: ConnectionController;
 	private readonly passphrase: Lazyable<string>;
 	private readonly emitter: Emitter;
 	private readonly origin: string | undefined;
@@ -75,6 +77,7 @@ export default class Wallet {
 		popupController: PopupController,
 		networkController: NetworkController,
 		confirmationController: ConfirmationController,
+		connectionController: ConnectionController,
 		emitter: Emitter | undefined,
 	) {
 		this.storage = storage;
@@ -82,6 +85,7 @@ export default class Wallet {
 		this.popup = popupController;
 		this.networkController = networkController;
 		this.confirmationController = confirmationController;
+		this.connectionController = connectionController;
 		this.passphrase = passphrase;
 		this.emitter = emitter;
 		this.origin = origin;
@@ -116,6 +120,7 @@ export default class Wallet {
 			storage,
 			popup,
 		);
+		const connectionController = new ConnectionController(storage);
 		return new Wallet(
 			passphrase,
 			origin,
@@ -124,6 +129,7 @@ export default class Wallet {
 			popup,
 			networkController,
 			approvalRequestController,
+			connectionController,
 			emitter,
 		);
 	}
@@ -333,37 +339,24 @@ export default class Wallet {
 				data: { origin: this.origin },
 			})
 			.then(async (metadata: string[]) => {
-				const connectedSites = await this._getConnectedSites();
-				connectedSites[this.origin] = metadata;
-				await this._setConnectedSites(connectedSites);
+				await this.connectionController.connect(this.origin, metadata.map(x => Address.fromHex(x, true)))
 				this.emitter("connected", metadata);
 				return metadata;
 			});
 	}
 
 	async isConnected(): Promise<boolean> {
-		const connectedSites = await this._getConnectedSites();
-		return connectedSites.hasOwnProperty(this.origin);
-	}
-
-	async _getConnectedSites() {
-		return (await this.storage.get(CONNECTED_SITES)) || {};
-	}
-
-	async _setConnectedSites(sites) {
-		console.log("sites", sites);
-		await this.storage.set(CONNECTED_SITES, sites);
+		return this.connectionController.isConnected(this.origin);
 	}
 
 	async listAccounts(): Promise<Account[]> {
 		const accounts = await this.storage.get<Account[]>(ACCOUNTS);
 		if (this.origin) {
-			const connectedSites = await this._getConnectedSites();
-			const connectedAddresses = connectedSites[this.origin];
-			return accounts.filter(
-				(x) =>
-					connectedAddresses.findIndex((addr) => addr === x.address) !== -1,
-			);
+			const checked: [boolean, Account][] = await Promise.all(accounts.map(
+				async (x) =>
+					[await this.connectionController.isConnected(this.origin, Address.fromHex(x.address)), x]
+			));
+			return checked.filter(x => x[0]).map(x => x[1]);
 		}
 
 		console.log(accounts);
