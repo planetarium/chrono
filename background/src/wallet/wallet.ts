@@ -145,15 +145,6 @@ export default class Wallet {
 			passphrase || resolve(this.passphrase),
 		);
 	}
-	async isValidNonce(nonce) {
-		let pendingNonce = await this.storage.get("nonce");
-		return pendingNonce == nonce;
-	}
-	async nextNonce(address: string) {
-		let pendingNonce = await this.api.getNextTxNonce(address);
-		this.storage.set("nonce", pendingNonce);
-		return pendingNonce;
-	}
 	async createSequentialWallet(primaryAddress: string, index: number) {
 		const wallet = await this.loadWallet(
 			primaryAddress,
@@ -191,10 +182,6 @@ export default class Wallet {
 		return this.decryptWallet(encryptedWallet, passphrase);
 	}
 	async _transferNCG(sender, receiver, amount, nonce, memo?) {
-		if (!(await this.isValidNonce(nonce))) {
-			throw "Invalid Nonce";
-		}
-
 		const wallet = await this.loadWallet(sender, resolve(this.passphrase));
 		const account = RawPrivateKey.fromHex(wallet.privateKey.slice(2));
 		const currentNetwork = await this.networkController.getCurrentNetwork();
@@ -282,7 +269,7 @@ export default class Wallet {
 					signer: sender.toBytes(),
 					actions: [action],
 					updatedAddresses: new Set([]),
-					nonce: BigInt(await this.nextNonce(sender.toString())),
+					nonce: BigInt(await this.api.getNextTxNonce(sender.toString())),
 					genesisHash,
 					publicKey: (await account.getPublicKey()).toBytes("uncompressed"),
 					timestamp: new Date(),
