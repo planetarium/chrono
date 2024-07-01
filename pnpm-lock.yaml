@@ -24,6 +24,9 @@ importers:
       '@planetarium/bencodex':
         specifier: 0.2.2
         version: 0.2.2
+      '@planetarium/lib9c':
+        specifier: npm:@jsr/planetarium__lib9c@0.2.0-dev.202406280302125015+422656569f31ecb5f6bb9bf2ab71ab84bc6ad4c3
+        version: '@jsr/planetarium__lib9c@0.2.0-dev.202406280302125015+422656569f31ecb5f6bb9bf2ab71ab84bc6ad4c3'
       '@planetarium/tx':
         specifier: ^4.4.2
         version: 4.4.2(@planetarium/account@4.4.2(patch_hash=jb6dglqvmbazko2rjmsq6cngsy))
@@ -1558,6 +1561,9 @@ packages:
 
   '@jsr/planetarium__lib9c@0.2.0-dev.202405270607435878+5300e991debf3ce9444201f037490c4f0e02406e':
     resolution: {integrity: sha512-mwK24vLWiy2zM4ihYxowyjEqoVXYMUVnLXzHUEcaQoHbBGg+s/2HMaXOLvOSrrN5HO85quIspwLp4K/OWsqvTA==, tarball: https://npm.jsr.io/~/11/@jsr/planetarium__lib9c/0.2.0-dev.202405270607435878+5300e991debf3ce9444201f037490c4f0e02406e.tgz}
+
+  '@jsr/planetarium__lib9c@0.2.0-dev.202406280302125015+422656569f31ecb5f6bb9bf2ab71ab84bc6ad4c3':
+    resolution: {integrity: sha512-WjV35+UeWRn9kjxzc1dPHALJVTANN800v2s6Jb5DOYFBS0aic9RA9Qil09sJVuPnk9irTArrUY5531Liz/Dgiw==, tarball: https://npm.jsr.io/~/11/@jsr/planetarium__lib9c/0.2.0-dev.202406280302125015+422656569f31ecb5f6bb9bf2ab71ab84bc6ad4c3.tgz}
 
   '@kamilkisiela/fast-url-parser@1.1.4':
     resolution: {integrity: sha512-gbkePEBupNydxCelHCESvFSFM8XPh1Zs/OAVRW/rKpEqPAl5PbOM90Si8mv9bvnR53uPD2s/FiRxdvSejpRJew==}
@@ -8053,6 +8059,15 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.4.15
 
   '@jsr/planetarium__lib9c@0.2.0-dev.202405270607435878+5300e991debf3ce9444201f037490c4f0e02406e':
+    dependencies:
+      '@planetarium/account': 4.4.2(patch_hash=jb6dglqvmbazko2rjmsq6cngsy)
+      '@planetarium/bencodex': 0.2.2
+      '@planetarium/tx': 4.4.2(@planetarium/account@4.4.2(patch_hash=jb6dglqvmbazko2rjmsq6cngsy))
+      buffer: 6.0.3
+      decimal.js: 10.4.3
+      uuid: 9.0.1
+
+  '@jsr/planetarium__lib9c@0.2.0-dev.202406280302125015+422656569f31ecb5f6bb9bf2ab71ab84bc6ad4c3':
     dependencies:
       '@planetarium/account': 4.4.2(patch_hash=jb6dglqvmbazko2rjmsq6cngsy)
       '@planetarium/bencodex': 0.2.2

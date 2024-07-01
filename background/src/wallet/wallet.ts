@@ -19,7 +19,7 @@ import {
 import * as ethers from "ethers";
 import { Address } from "@planetarium/account";
 import Decimal from "decimal.js";
-import { encodeSignedTx, encodeUnsignedTx, signTx } from "@planetarium/tx";
+import { UnsignedTx, encodeSignedTx, encodeUnsignedTx, signTx } from "@planetarium/tx";
 import {
 	APPROVAL_REQUESTS,
 	CONNECTED_SITES,
@@ -33,6 +33,8 @@ import { Buffer } from "buffer";
 import { PopupController } from "../controllers/popup";
 import { NetworkController } from "../controllers/network";
 import { ConfirmationController } from "../controllers/confirmation";
+import { MEAD, NCG, TransferAsset, fav } from "@planetarium/lib9c";
+import { ConnectionController } from "../controllers/connection";
 
 interface SavedTransactionHistory {
 	id: string;
@@ -55,6 +57,7 @@ export default class Wallet {
 	private readonly popup: PopupController;
 	private readonly networkController: NetworkController;
 	private readonly confirmationController: ConfirmationController;
+	private readonly connectionController: ConnectionController;
 	private readonly passphrase: Lazyable<string>;
 	private readonly emitter: Emitter;
 	private readonly origin: string | undefined;
@@ -74,6 +77,7 @@ export default class Wallet {
 		popupController: PopupController,
 		networkController: NetworkController,
 		confirmationController: ConfirmationController,
+		connectionController: ConnectionController,
 		emitter: Emitter | undefined,
 	) {
 		this.storage = storage;
@@ -81,6 +85,7 @@ export default class Wallet {
 		this.popup = popupController;
 		this.networkController = networkController;
 		this.confirmationController = confirmationController;
+		this.connectionController = connectionController;
 		this.passphrase = passphrase;
 		this.emitter = emitter;
 		this.origin = origin;
@@ -115,6 +120,7 @@ export default class Wallet {
 			storage,
 			popup,
 		);
+		const connectionController = new ConnectionController(storage);
 		return new Wallet(
 			passphrase,
 			origin,
@@ -123,6 +129,7 @@ export default class Wallet {
 			popup,
 			networkController,
 			approvalRequestController,
+			connectionController,
 			emitter,
 		);
 	}
@@ -143,15 +150,6 @@ export default class Wallet {
 			encryptedWalletJson,
 			passphrase || resolve(this.passphrase),
 		);
-	}
-	async isValidNonce(nonce) {
-		let pendingNonce = await this.storage.get("nonce");
-		return pendingNonce == nonce;
-	}
-	async nextNonce(address: string) {
-		let pendingNonce = await this.api.getNextTxNonce(address);
-		this.storage.set("nonce", pendingNonce);
-		return pendingNonce;
 	}
 	async createSequentialWallet(primaryAddress: string, index: number) {
 		const wallet = await this.loadWallet(
@@ -190,35 +188,31 @@ export default class Wallet {
 		return this.decryptWallet(encryptedWallet, passphrase);
 	}
 	async _transferNCG(sender, receiver, amount, nonce, memo?) {
-		if (!(await this.isValidNonce(nonce))) {
-			throw "Invalid Nonce";
-		}
-
-		const senderEncryptedWallet = await this.storage.secureGet(
-			ENCRYPTED_WALLET + sender.toLowerCase(),
-		);
 		const wallet = await this.loadWallet(sender, resolve(this.passphrase));
-		const utxBytes = Buffer.from(
-			await this.api.unsignedTx(
-				wallet.publicKey.slice(2),
-				await this.api.getTransferAsset(
-					wallet.address,
-					receiver,
-					amount.toString(),
-				),
-				nonce,
-			),
-			"hex",
-		);
-
 		const account = RawPrivateKey.fromHex(wallet.privateKey.slice(2));
-		const signature = (await account.sign(utxBytes)).toBytes();
-		const utx = decode(utxBytes) as BencodexDictionary;
-		const signedTx = new BencodexDictionary([
-			...utx,
-			[new Uint8Array([0x53]), signature],
-		]);
-		const encodedHex = Buffer.from(encode(signedTx)).toString("hex");
+		const currentNetwork = await this.networkController.getCurrentNetwork();
+		const genesisHash = Buffer.from(currentNetwork.genesisHash, "hex");
+		const action = new TransferAsset({
+			sender: Address.fromHex(sender, true),
+			recipient: Address.fromHex(receiver, true),
+			amount: fav(NCG, amount),
+			memo,
+		});
+
+		const unsignedTx: UnsignedTx = {
+			signer: sender.toBytes(),
+			actions: [action.bencode()],
+			updatedAddresses: new Set([]),
+			nonce: BigInt(nonce),
+			genesisHash,
+			publicKey: (await account.getPublicKey()).toBytes("uncompressed"),
+			timestamp: new Date(),
+			maxGasPrice: fav(MEAD, 1),
+			gasLimit: 4n,
+		};
+
+		const signedTx = await signTx(unsignedTx, account);
+		const encodedHex = Buffer.from(encode(encodeSignedTx(signedTx))).toString("hex");
 		const { txId, endpoint } = await this.api.stageTx(encodedHex);
 
 		return { txId, endpoint };
@@ -281,20 +275,11 @@ export default class Wallet {
 					signer: sender.toBytes(),
 					actions: [action],
 					updatedAddresses: new Set([]),
-					nonce: BigInt(await this.nextNonce(sender.toString())),
+					nonce: BigInt(await this.api.getNextTxNonce(sender.toString())),
 					genesisHash,
 					publicKey: (await account.getPublicKey()).toBytes("uncompressed"),
 					timestamp: new Date(),
-					maxGasPrice: {
-						currency: {
-							ticker: "Mead",
-							decimalPlaces: 18,
-							minters: null,
-							totalSupplyTrackable: false,
-							maximumSupply: null,
-						},
-						rawValue: BigInt(Decimal.pow(10, 18).toString()),
-					},
+					maxGasPrice: fav(MEAD, 1),
 					gasLimit,
 				};
 
@@ -354,37 +339,24 @@ export default class Wallet {
 				data: { origin: this.origin },
 			})
 			.then(async (metadata: string[]) => {
-				const connectedSites = await this._getConnectedSites();
-				connectedSites[this.origin] = metadata;
-				await this._setConnectedSites(connectedSites);
+				await this.connectionController.connect(this.origin, metadata.map(x => Address.fromHex(x, true)))
 				this.emitter("connected", metadata);
 				return metadata;
 			});
 	}
 
 	async isConnected(): Promise<boolean> {
-		const connectedSites = await this._getConnectedSites();
-		return connectedSites.hasOwnProperty(this.origin);
-	}
-
-	async _getConnectedSites() {
-		return (await this.storage.get(CONNECTED_SITES)) || {};
-	}
-
-	async _setConnectedSites(sites) {
-		console.log("sites", sites);
-		await this.storage.set(CONNECTED_SITES, sites);
+		return this.connectionController.isConnected(this.origin);
 	}
 
 	async listAccounts(): Promise<Account[]> {
 		const accounts = await this.storage.get<Account[]>(ACCOUNTS);
 		if (this.origin) {
-			const connectedSites = await this._getConnectedSites();
-			const connectedAddresses = connectedSites[this.origin];
-			return accounts.filter(
-				(x) =>
-					connectedAddresses.findIndex((addr) => addr === x.address) !== -1,
-			);
+			const checked: [boolean, Account][] = await Promise.all(accounts.map(
+				async (x) =>
+					[await this.connectionController.isConnected(this.origin, Address.fromHex(x.address)), x]
+			));
+			return checked.filter(x => x[0]).map(x => x[1]);
 		}
 
 		console.log(accounts);
