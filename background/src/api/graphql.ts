@@ -1,4 +1,3 @@
-import axios from "axios";
 import type { IStorage } from "../storage/index.js";
 import {
 	CURRENT_NETWORK,
@@ -6,11 +5,6 @@ import {
 	Network,
 	NetworkId,
 } from "../constants/constants";
-import { UnsignedTx } from "@planetarium/tx";
-import { Buffer } from "buffer";
-import { decode } from "@planetarium/bencodex";
-import { Address, PublicKey } from "@planetarium/account";
-import Decimal from "decimal.js";
 
 async function getLastBlockIndex(endpoint: string) {
 	const response = await fetch(endpoint, {
@@ -76,7 +70,6 @@ export default class Graphql {
 		this.storage = storage;
 		this.endpoints = endpoints;
 		this.canCall = [
-			"updateNetwork",
 			"getLastBlockIndex",
 			"getBalance",
 			"getTransactionStatus",

@@ -5,8 +5,6 @@ import {
 	TXS,
 	ACCOUNTS,
 	Account,
-	Network,
-	NetworkId,
 } from "../constants/constants";
 import { RawPrivateKey } from "@planetarium/account";
 import {
@@ -18,15 +16,7 @@ import {
 } from "@planetarium/bencodex";
 import * as ethers from "ethers";
 import { Address } from "@planetarium/account";
-import Decimal from "decimal.js";
 import { UnsignedTx, encodeSignedTx, encodeUnsignedTx, signTx } from "@planetarium/tx";
-import {
-	APPROVAL_REQUESTS,
-	CONNECTED_SITES,
-	CURRENT_NETWORK,
-	NETWORKS,
-} from "../constants/constants";
-import { nanoid } from "nanoid";
 import { Lazyable, resolve } from "../utils/lazy";
 import { Emitter } from "../event";
 import { Buffer } from "buffer";
@@ -97,9 +87,6 @@ export default class Wallet {
 			"getPrivateKey",
 			"sign",
 			"signTx",
-			"getApprovalRequests",
-			"approveRequest",
-			"rejectRequest",
 			"listAccounts",
 			"getPublicKey",
 			"connect",

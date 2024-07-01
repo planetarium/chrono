@@ -105,7 +105,7 @@ export default defineComponent({
 			refreshTimer: null,
 		};
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.refreshTimer) {
 			clearInterval(this.refreshTimer);
 		}
