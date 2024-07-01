@@ -76,7 +76,6 @@ export default class Graphql {
 		this.storage = storage;
 		this.endpoints = endpoints;
 		this.canCall = [
-			"updateNetwork",
 			"getLastBlockIndex",
 			"getBalance",
 			"getTransactionStatus",
