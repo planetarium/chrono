@@ -76,7 +76,7 @@ export default defineComponent({
 			selectedAddresses: [],
 		};
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.refreshTimer) {
 			clearInterval(this.refreshTimer);
 		}
