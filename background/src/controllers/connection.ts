@@ -12,7 +12,7 @@ export class ConnectionController {
 	async connect(origin: string, addresses: Address[]): Promise<void> {
         const connections = await this.getConnections();
         connections[origin] = addresses.map(x => x.toString());
-        await this.setConnnections(connections);
+        await this.setConnections(connections);
 	}
 
 	async isConnected(origin: string, address?: Address): Promise<boolean> {
@@ -29,7 +29,7 @@ export class ConnectionController {
 		return (await this.storage.get(CONNECTED_SITES)) || {};
 	}
 
-	private async setConnnections(connections: Connections) {
+	private async setConnections(connections: Connections) {
 		console.log("connections", connections);
 		await this.storage.set(CONNECTED_SITES, connections);
 	}
