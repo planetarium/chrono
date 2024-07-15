@@ -23,9 +23,7 @@ async function getLastBlockIndex(endpoint: string) {
                 }
                 `,
 		}),
-		headers: [
-			['content-type', 'application/json']
-		]
+		headers: [["content-type", "application/json"]],
 	});
 
 	const data = await response.json();
@@ -92,7 +90,7 @@ export default class Graphql {
 				const result = await fn(endpoint);
 				return result;
 			} catch (e) {
-				console.error('e', e);
+				console.error("e", e);
 				exceptions.push(e);
 			}
 		}
@@ -120,9 +118,7 @@ export default class Graphql {
                   }
                 `,
 				}),
-				headers: [
-					['content-type', 'application/json']
-				]
+				headers: [["content-type", "application/json"]],
 			});
 
 			const data = await response.json();
@@ -143,9 +139,7 @@ export default class Graphql {
                   }
                 `,
 				}),
-				headers: [
-					['content-type', 'application/json']
-				]
+				headers: [["content-type", "application/json"]],
 			});
 
 			const data = await response.json();
@@ -168,9 +162,7 @@ export default class Graphql {
                       }
                     `,
 				}),
-				headers: [
-					['content-type', 'application/json']
-				]
+				headers: [["content-type", "application/json"]],
 			});
 			const data = await response.json();
 			return { txId: data["data"]["stageTransaction"], endpoint };
@@ -192,9 +184,7 @@ export default class Graphql {
                     }
                 `,
 			}),
-			headers: [
-				['content-type', 'application/json']
-			]
+			headers: [["content-type", "application/json"]],
 		});
 		const data = await response.json();
 		return data["data"]["transaction"]["transactionResult"]["txStatus"];

@@ -16,7 +16,12 @@ import {
 } from "@planetarium/bencodex";
 import * as ethers from "ethers";
 import { Address } from "@planetarium/account";
-import { UnsignedTx, encodeSignedTx, encodeUnsignedTx, signTx } from "@planetarium/tx";
+import {
+	UnsignedTx,
+	encodeSignedTx,
+	encodeUnsignedTx,
+	signTx,
+} from "@planetarium/tx";
 import { Lazyable, resolve } from "../utils/lazy";
 import { Emitter } from "../event";
 import { Buffer } from "buffer";
@@ -199,7 +204,9 @@ export default class Wallet {
 		};
 
 		const signedTx = await signTx(unsignedTx, account);
-		const encodedHex = Buffer.from(encode(encodeSignedTx(signedTx))).toString("hex");
+		const encodedHex = Buffer.from(encode(encodeSignedTx(signedTx))).toString(
+			"hex",
+		);
 		const { txId, endpoint } = await this.api.stageTx(encodedHex);
 
 		return { txId, endpoint };
@@ -326,7 +333,10 @@ export default class Wallet {
 				data: { origin: this.origin },
 			})
 			.then(async (metadata: string[]) => {
-				await this.connectionController.connect(this.origin, metadata.map(x => Address.fromHex(x, true)))
+				await this.connectionController.connect(
+					this.origin,
+					metadata.map((x) => Address.fromHex(x, true)),
+				);
 				this.emitter("connected", metadata);
 				return metadata;
 			});
@@ -339,11 +349,16 @@ export default class Wallet {
 	async listAccounts(): Promise<Account[]> {
 		const accounts = await this.storage.get<Account[]>(ACCOUNTS);
 		if (this.origin) {
-			const checked: [boolean, Account][] = await Promise.all(accounts.map(
-				async (x) =>
-					[await this.connectionController.isConnected(this.origin, Address.fromHex(x.address)), x]
-			));
-			return checked.filter(x => x[0]).map(x => x[1]);
+			const checked: [boolean, Account][] = await Promise.all(
+				accounts.map(async (x) => [
+					await this.connectionController.isConnected(
+						this.origin,
+						Address.fromHex(x.address),
+					),
+					x,
+				]),
+			);
+			return checked.filter((x) => x[0]).map((x) => x[1]);
 		}
 
 		console.log(accounts);
