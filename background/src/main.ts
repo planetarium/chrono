@@ -3,8 +3,8 @@ import { Storage } from "./storage/index.js";
 import Wallet from "./wallet/wallet";
 import { Buffer } from "buffer";
 import {
-    PASSWORD_CHECKER,
-    PASSWORD_CHECKER_VALUE,
+	PASSWORD_CHECKER,
+	PASSWORD_CHECKER_VALUE,
 } from "./constants/constants";
 import { NetworkController } from "./controllers/network";
 import { ConfirmationController } from "./controllers/confirmation";
@@ -18,31 +18,31 @@ let passphraseTTL = 0;
 let connections: chrome.runtime.Port[] = [];
 
 const emitter = (event: string, data: any) => {
-    for (const port of connections) {
-        port.postMessage({
-            event,
-            data,
-        });
-    }
+	for (const port of connections) {
+		port.postMessage({
+			event,
+			data,
+		});
+	}
 };
 
 const checkValidPassphrase = async (p: string): Promise<boolean> => {
-    const storage = new Storage(p);
-    try {
-        const value = await storage.get<string>(PASSWORD_CHECKER);
-        const decrypted = await aes256.decrypt(value, p);
-        return decrypted === PASSWORD_CHECKER_VALUE;
-    } catch (e) {
-        return false;
-    }
+	const storage = new Storage(p);
+	try {
+		const value = await storage.get<string>(PASSWORD_CHECKER);
+		const decrypted = await aes256.decrypt(value, p);
+		return decrypted === PASSWORD_CHECKER_VALUE;
+	} catch (e) {
+		return false;
+	}
 };
 
 function setup() {
-	chrome.runtime.onConnect.addListener(port => {
+	chrome.runtime.onConnect.addListener((port) => {
 		connections.push(port);
 
 		port.onDisconnect.addListener(() => {
-			connections = connections.filter(p => p !== port);
+			connections = connections.filter((p) => p !== port);
 		});
 
 		port.onMessage.addListener(async (req) => {
@@ -55,7 +55,11 @@ function setup() {
 					req.origin,
 				);
 				const connected = await wallet.isConnected();
-				if (!connected && req.method !== "connect" && req.method !== "isConnected") {
+				if (
+					!connected &&
+					req.method !== "connect" &&
+					req.method !== "isConnected"
+				) {
 					port.postMessage({
 						error: `${req.origin} is not connected. Call 'window.chronoWallet.connect' first.`,
 						messageId: req.messageId,
@@ -114,7 +118,9 @@ function setup() {
 				);
 				if (confirmationController[req.method]) {
 					try {
-						const result = await confirmationController[req.method](...req.params);
+						const result = await confirmationController[req.method](
+							...req.params,
+						);
 						port.postMessage({
 							result,
 							messageId: req.messageId,
@@ -136,9 +142,9 @@ function setup() {
 	});
 }
 
-self.addEventListener('install', () => {
+self.addEventListener("install", () => {
 	// event.waitUntil(self.skipWaiting());
-	console.log('install case');
+	console.log("install case");
 	setup();
 });
 
@@ -146,42 +152,41 @@ self.addEventListener('install', () => {
 if (self.serviceWorker.state === "activated") {
 	console.log("activated case");
 	setup();
-};
-
+}
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    try {
-        if (req.action === "passphrase") {
-            if (req.method === "set") {
-                passphrase = req.params[0];
-                passphraseTTL = Date.now() + 3600 * 1000;
-                sendResponse({});
-            } else if (req.method === "checkTTL") {
-                if (passphraseTTL && passphraseTTL < Date.now()) {
-                    passphrase = null;
-                }
-                sendResponse({});
-            } else if (req.method === "remove") {
-                passphrase = null;
-                sendResponse({});
-            } else if (req.method === "isSignedIn") {
-                if (passphrase === null) {
-                    sendResponse(false);
-                } else {
-                    checkValidPassphrase(passphrase).then(sendResponse);
-                }
-            } else if (req.method === "isValid") {
-                checkValidPassphrase(req.params[0]).then(sendResponse);
-            }
-        } else if (req.action === "hasWallet") {
-            const storage = new Storage(passphrase!);
+	try {
+		if (req.action === "passphrase") {
+			if (req.method === "set") {
+				passphrase = req.params[0];
+				passphraseTTL = Date.now() + 3600 * 1000;
+				sendResponse({});
+			} else if (req.method === "checkTTL") {
+				if (passphraseTTL && passphraseTTL < Date.now()) {
+					passphrase = null;
+				}
+				sendResponse({});
+			} else if (req.method === "remove") {
+				passphrase = null;
+				sendResponse({});
+			} else if (req.method === "isSignedIn") {
+				if (passphrase === null) {
+					sendResponse(false);
+				} else {
+					checkValidPassphrase(passphrase).then(sendResponse);
+				}
+			} else if (req.method === "isValid") {
+				checkValidPassphrase(req.params[0]).then(sendResponse);
+			}
+		} else if (req.action === "hasWallet") {
+			const storage = new Storage(passphrase!);
 			storage.has("accounts").then(sendResponse);
-        } else {
-            if (passphrase == null) {
-                return sendResponse({ error: "NotSignedIn" });
-            }
+		} else {
+			if (passphrase == null) {
+				return sendResponse({ error: "NotSignedIn" });
+			}
 
-            if (req.action === "graphql") {
+			if (req.action === "graphql") {
 				const storage = new Storage(passphrase);
 				Graphql.createInstance(storage).then((graphql) => {
 					console.log("graphql", req);
@@ -194,10 +199,10 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 						sendResponse({ error: "Unknown Method" });
 					}
 				});
-            }
+			}
 
-            if (req.action === "storage") {
-                const storage = new Storage(passphrase);
+			if (req.action === "storage") {
+				const storage = new Storage(passphrase);
 				if (storage[req.method] && storage.canCallExternal(req.method)) {
 					storage[req.method]
 						.call(storage, ...req.params)
@@ -206,16 +211,16 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 				} else {
 					sendResponse({ error: "Unknown Method" });
 				}
-            }
+			}
 
-            if (req.action === "confirmation") {
-                const storage = new Storage(passphrase);
-                const popupController = new PopupController();
-                const confirmationController = new ConfirmationController(
-                    storage,
-                    popupController,
-                );
-                if (confirmationController[req.method]) {
+			if (req.action === "confirmation") {
+				const storage = new Storage(passphrase);
+				const popupController = new PopupController();
+				const confirmationController = new ConfirmationController(
+					storage,
+					popupController,
+				);
+				if (confirmationController[req.method]) {
 					confirmationController[req.method]
 						.call(confirmationController, ...req.params)
 						.then(sendResponse)
@@ -223,11 +228,11 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 				} else {
 					sendResponse({ error: "Unknown Method" });
 				}
-            }
+			}
 
-            if (req.action === "wallet") {
-                const storage = new Storage(passphrase);
-                Wallet.createInstance(storage, passphrase, emitter).then((wallet) => {
+			if (req.action === "wallet") {
+				const storage = new Storage(passphrase);
+				Wallet.createInstance(storage, passphrase, emitter).then((wallet) => {
 					if (wallet[req.method] && wallet.canCallExternal(req.method)) {
 						wallet[req.method]
 							.call(wallet, ...req.params)
@@ -240,12 +245,12 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 						sendResponse({ error: "Unknown Method" });
 					}
 				});
-            }
+			}
 
-            if (req.action === "network") {
-                const storage = new Storage(() => passphrase!);
-                const networkController = new NetworkController(storage, emitter);
-                if (networkController[req.method]) {
+			if (req.action === "network") {
+				const storage = new Storage(() => passphrase!);
+				const networkController = new NetworkController(storage, emitter);
+				if (networkController[req.method]) {
 					networkController[req.method]
 						.call(networkController, ...req.params)
 						.then((x) =>
@@ -264,12 +269,12 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 						error: "Unknown Method",
 					});
 				}
-            }
-        }
-    } catch (e) {
-        sendResponse({ error: e.message });
-    }
+			}
+		}
+	} catch (e) {
+		sendResponse({ error: e.message });
+	}
 
 	return true;
-})
-self.addEventListener('message', console.log);
+});
+self.addEventListener("message", console.log);
