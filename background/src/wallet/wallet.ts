@@ -333,7 +333,7 @@ export default class Wallet {
 	}
 
 	async isConnected(): Promise<boolean> {
-		return this.connectionController.isConnected(this.origin);
+		return this.connectionController.isConnectedSite(this.origin);
 	}
 
 	async listAccounts(): Promise<Account[]> {

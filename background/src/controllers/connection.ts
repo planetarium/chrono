@@ -15,12 +15,17 @@ export class ConnectionController {
         await this.setConnections(connections);
 	}
 
-	async isConnected(origin: string, address?: Address): Promise<boolean> {
+	async isConnectedSite(origin: string): Promise<boolean> {
 		const connections = await this.getConnections();
-		if (!connections.hasOwnProperty(origin)) {
-            return false;
-        }
+		return connections.hasOwnProperty(origin);
+	}
 
+	async isConnected(origin: string, address: Address): Promise<boolean> {
+		if (!this.isConnectedSite(origin)) {
+			return false;
+		}
+
+		const connections = await this.getConnections();
         const connectedAddresses = connections[origin];
         return connectedAddresses.find(x => x === address.toString()) !== undefined
 	}
