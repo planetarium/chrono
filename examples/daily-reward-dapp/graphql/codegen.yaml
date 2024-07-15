@@ -1,8 +1,8 @@
 overwrite: true
-schema: ./schema.graphql
-documents: ./api.graphql
+schema: ./graphql/schema.graphql
+documents: ./graphql/api.graphql
 generates:
-  src/generated/graphql.tsx:
+  generated/graphql.tsx:
     plugins:
       - typescript
       - typescript-operations
@@ -15,7 +15,7 @@ generates:
       scalars:
         Long: number
         TxId: string
-  src/generated/graphql-request.ts:
+  generated/graphql-request.ts:
     plugins:
     - typescript
     - typescript-operations
