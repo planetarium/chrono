@@ -1,3 +1,25 @@
+query getTip {
+  nodeStatus {
+    tip {
+      index
+    }
+  }
+}
+
+query getAvatars($agentAddress: Address!) {
+  stateQuery {
+    agent(address: $agentAddress) {
+      avatarStates {
+        address,
+        name,
+        level,
+        actionPoint,
+        dailyRewardReceivedIndex,
+      }
+    }
+  }
+}
+
 query GetAvatarsWithTip($agentAddress: Address!) {
     nodeStatus {
         tip {
