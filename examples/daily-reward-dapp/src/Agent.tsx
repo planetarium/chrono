@@ -1,52 +1,54 @@
 import { Address } from "@planetarium/account";
 import { RefillButton } from "./RefillButton";
-import { useAgent } from "./hooks/useAgent";
-import { useTip } from "./hooks/useTip";
+import { useGetAvatarsQuery, useGetTipQuery } from "../graphql/generated/graphql";
 
 interface AgentProps {
-	network: "odin" | "heimdall";
 	agentAddress: Address;
-
 	setTxId: (value: string | null) => void;
 }
 
-function Agent({ network, agentAddress, setTxId }: AgentProps) {
+function Agent({ agentAddress, setTxId }: AgentProps) {
 	const {
-		data: agent,
-		isLoading: agentLoading,
-		isSuccess: agentSuccess,
-	} = useAgent(network, agentAddress.toString());
+		data: tipData,
+		loading: tipLoading,
+		error: tipError,
+	} = useGetTipQuery({
+		pollInterval: 1000,
+	});
+
 	const {
-		data: tip,
-		isLoading: tipLoading,
-		isSuccess: tipSuccess,
-	} = useTip(network);
+		data: avatarsData,
+		loading: avatarsLoading,
+		error: avatarsError
+	} = useGetAvatarsQuery({
+		variables: { agentAddress: agentAddress.toString() },
+		pollInterval: 1000,
+	});
 
-	const isLoading = agentLoading || tipLoading;
-	const isSuccess = agentSuccess && tipSuccess;
-
-	if (isLoading) {
+	if (tipLoading || avatarsLoading) {
 		return <p className="mt-8 text-white">Loading...</p>;
 	}
 
-	if (!isSuccess) {
+	if (tipError || avatarsError) {
 		return <p className="mt-8 text-white">Failed to fetch data.</p>;
 	}
 
-	if (agent.avatars.length < 1) {
+	const tip = tipData?.nodeStatus?.tip?.index || -1;
+	const avatars = avatarsData?.stateQuery?.agent?.avatarStates || [];
+	if (avatars.length < 1) {
 		return (
 			<p className="mt-8 text-white">The agent may not have any avatars.</p>
 		);
 	}
-	const avatars = agent.avatars;
+
 	const REFILL_INTERVAL = 2550 as const;
 
 	return (
 		<div className="flex flex-col mt-8 min-w-full min-h-full justify-center items-center">
 			{avatars.map(
 				({
-					avatarAddress,
-					avatarName,
+					address: avatarAddress,
+					name: avatarName,
 					actionPoint,
 					dailyRewardReceivedIndex,
 				}) => (
