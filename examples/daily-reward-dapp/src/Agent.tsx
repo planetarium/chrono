@@ -1,6 +1,7 @@
 import { Address } from "@planetarium/account";
 import { RefillButton } from "./RefillButton";
 import { useGetAvatarsQuery, useGetTipQuery } from "../graphql/generated/graphql";
+import { CreateAvatarButton } from "./CreateAvatarButton";
 
 interface AgentProps {
 	agentAddress: Address;
@@ -37,7 +38,14 @@ function Agent({ agentAddress, setTxId }: AgentProps) {
 	const avatars = avatarsData?.stateQuery?.agent?.avatarStates || [];
 	if (avatars.length < 1) {
 		return (
-			<p className="mt-8 text-white">The agent may not have any avatars.</p>
+			<div>
+				<p className="mt-8 text-white">The agent may not have any avatars.</p>
+				<CreateAvatarButton
+					signer={agentAddress}
+					avatarIndex={0}
+					setTxId={setTxId}
+				/>
+			</div>
 		);
 	}
 
