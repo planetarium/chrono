@@ -32,6 +32,15 @@ export const useNetwork = defineStore("Network", () => {
 				explorerEndpoint: "https://heimdall.9cscan.com",
 				isMainnet: true,
 			},
+			{
+				id: "0x900000000000",
+				name: "odin",
+				genesisHash:
+					"ee0dae112ece151d4bce5300b7a16c1adc86cdc837df378fb395876de68b244c",
+				gqlEndpoint: "http://127.0.0.1:31280/graphql",
+				explorerEndpoint: "",
+				isMainnet: false,
+			},
 		] as const;
 		await bg.storage.set(NETWORKS, initialNetworks);
 
