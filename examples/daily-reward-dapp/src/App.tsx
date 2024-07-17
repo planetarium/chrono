@@ -2,7 +2,6 @@ import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import { useState } from "react";
 import Agent from "./Agent";
 import { getChronoSdk } from "@planetarium/chrono-sdk";
-import { HEIMDALL_GENESIS_HASH, ODIN_GENESIS_HASH } from "./constants";
 import {
 	useAccounts,
 	useConnect,
@@ -79,18 +78,8 @@ function App() {
 		);
 	}
 
-	const guessedNetworkName = (() => {
-		if (network.genesisHash.toLowerCase() === ODIN_GENESIS_HASH) {
-			return "odin";
-		} else if (network.genesisHash.toLowerCase() === HEIMDALL_GENESIS_HASH) {
-			return "heimdall";
-		} else {
-			return "unknown";
-		}
-	})();
-
-	if (guessedNetworkName === "unknown") {
-		return <>Unknown network (genesis hash: {network.genesisHash})</>;
+	if (!network.gqlEndpoint) {
+		return <>No GraphQL endpoint found for the network.</>;
 	}
 
 	const client = new ApolloClient({
@@ -114,7 +103,6 @@ function App() {
 					))}
 				</select>
 				<Agent
-					network={guessedNetworkName}
 					agentAddress={accounts[currentAccount]}
 					setTxId={setTxId}
 				/>
