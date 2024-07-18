@@ -1,6 +1,5 @@
 overwrite: true
 schema: https://odin-rpc-1.nine-chronicles.com/graphql
-# schema: ./graphql/schema.graphql
 documents: ./graphql/api.graphql
 generates:
   ./graphql/generated/graphql.tsx:
