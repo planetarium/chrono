@@ -12,7 +12,7 @@
     "@noble/hashes": "^1.4.0",
     "@planetarium/account": "~4.4.2",
     "@planetarium/bencodex": "0.2.2",
-    "@planetarium/lib9c": "npm:@jsr/planetarium__lib9c@0.2.0-dev.202406280302125015+422656569f31ecb5f6bb9bf2ab71ab84bc6ad4c3",
+    "@planetarium/lib9c": "npm:@jsr/planetarium__lib9c@^0.3.0-dev.202407170506408289+2af04aea533872ccba4f01c583b2e53694d2e18e",
     "@planetarium/tx": "^4.4.2",
     "axios": "^0.24.0",
     "bencodex": "^0.1.1",
