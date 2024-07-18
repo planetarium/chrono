@@ -34,7 +34,7 @@ export const useNetwork = defineStore("Network", () => {
 			},
 			{
 				id: "0x900000000000",
-				name: "odin",
+				name: "odin-localhost",
 				genesisHash:
 					"ee0dae112ece151d4bce5300b7a16c1adc86cdc837df378fb395876de68b244c",
 				gqlEndpoint: "http://127.0.0.1:31280/graphql",
