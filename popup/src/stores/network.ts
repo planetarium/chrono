@@ -33,12 +33,18 @@ export const useNetwork = defineStore("Network", () => {
 				isMainnet: true,
 			},
 			{
+				// setup your local network's planet id here.
 				id: "0x900000000000",
-				name: "odin-localhost",
+				// setup your local network's name here.
+				name: "local-network",
+				// setup your local network's genesis block hash here.
 				genesisHash:
 					"ee0dae112ece151d4bce5300b7a16c1adc86cdc837df378fb395876de68b244c",
+				// setup your local network's GraphQL endpoint here.
 				gqlEndpoint: "http://127.0.0.1:31280/graphql",
+				// setup your local network's explorer endpoint here.
 				explorerEndpoint: "",
+				// setup your local network's mainnet status here.
 				isMainnet: false,
 			},
 		] as const;
