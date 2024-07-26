@@ -126,9 +126,6 @@ export default {
 		) => {
 			return await callWallet("sendNCG", [sender, receiver, amount, nonce]);
 		},
-		nextNonce: async (address: string) => {
-			return await callWallet<number>("nextNonce", [address]);
-		},
 		getPrivateKey: async (address: string, passphrase: string) => {
 			return await callWallet<string>("getPrivateKey", [address, passphrase]);
 		},

@@ -88,7 +88,6 @@ export default class Wallet {
 			"createSequentialWallet",
 			"createPrivateKeyWallet",
 			"sendNCG",
-			"nextNonce",
 			"getPrivateKey",
 			"sign",
 			"signTx",

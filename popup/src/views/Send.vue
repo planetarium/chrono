@@ -181,7 +181,7 @@ export default defineComponent({
 				throw new Error("'account' state seems not loaded yet.");
 			}
 			if (await (this.$refs["sendForm"] as VForm).validate()) {
-				this.nonce = await bg.wallet.nextNonce(this.account.address);
+				this.nonce = await bg.graphql("getNextTxNonce", this.account.address);
 				this.confirmDialog = true;
 			}
 		},
