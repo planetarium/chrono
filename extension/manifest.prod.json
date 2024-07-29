@@ -4,7 +4,7 @@
     "short_name": "__MSG_appName__",
     "description": "__MSG_appDescription__",
     "homepage_url": "https://github.com/planetarium/chrono",
-    "version": "0.1.0",
+    "version": "1.0.5",
     "default_locale": "en",
     "action": {
         "default_icon": "images/logo.png",
@@ -25,18 +25,28 @@
     "permissions": [
         "storage"
     ],
-    "web_accessible_resources": [{
-        "resources": [
-            "content-scripts/global.js"
-        ],
-        "matches": ["<all_urls>"]
-    }],
-    "content_scripts": [{
-        "matches": ["file://*/*", "http://*/*", "https://*/*"],
-        "js": [
-            "content-scripts/injectsdk.js"
-        ],
-        "run_at": "document_start",
-        "all_frames": true
-    }]
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "content-scripts/global.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "file://*/*",
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": [
+                "content-scripts/injectsdk.js"
+            ],
+            "run_at": "document_start",
+            "all_frames": true
+        }
+    ]
 }
