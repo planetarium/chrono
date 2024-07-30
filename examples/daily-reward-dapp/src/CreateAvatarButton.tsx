@@ -20,7 +20,7 @@ function createCreateAvatarAction(avatarIndex: number): CreateAvatar {
         ear: 0n,
         lens: 0n,
         tail: 0n,
-        name: `Avatar ${avatarIndex}`,
+        name: `Avatar${avatarIndex}`,
     });
 }
 
