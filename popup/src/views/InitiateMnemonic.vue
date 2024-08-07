@@ -7,21 +7,77 @@
         <v-card-text class="px-4 pb-0">
           <v-row>
             <v-col class="pa-0">
-            <v-tabs dark color="point" center-active v-model="tab" fixed-tabs height="36px">
-              <v-tab>{{t('createNewAccount')}}</v-tab>
-              <v-tab>{{t('recoverAccount')}}</v-tab>
-            </v-tabs>
+							<v-tabs dark color="point" center-active v-model="tab" fixed-tabs height="36px">
+								<v-tab>{{t('createNewAccount')}}</v-tab>
+								<v-tab>{{t('recoverAccount')}}</v-tab>
+							</v-tabs>
             </v-col>
           </v-row>
 
           <v-row>
             <v-col class="pa-2">
-            <div v-if="tab == 0" class="mt-4">
-              <v-textarea :label="t('mnemonic')" readonly height="128px" dark outlined background-color="#333" v-model="mnemonic"></v-textarea>
-            </div>
-            <div v-if="tab == 1" class="mt-4">
-              <v-textarea :label="t('mnemonicInput')" height="128px" :error-messages="errorRecoverMnemonic" dark outlined background-color="#333" v-model="recoverMnemonic"></v-textarea>
-            </div>
+							<div v-if="tab == 0" class="mt-4">
+								<v-text-field
+									v-if="!showMnemonic"
+									:label="t('mnemonic')"
+									:type="'password'"
+									readonly
+									multi-line
+									dark
+									outlined
+									background-color="#333"
+									v-model="mnemonic"
+								/>
+								<v-textarea
+									v-if="showMnemonic"
+									:label="t('mnemonic')"
+									readonly
+									rows="3"
+									dark
+									outlined
+									background-color="#333"
+									v-model="mnemonic"
+								/>
+								<v-btn
+									color="point"
+									dark
+									outlined
+									@click="showMnemonic = !showMnemonic">
+									{{ showMnemonic ? t('hideMnemonic') : t('showMnemonic') }}
+								</v-btn>
+							</div>
+							<div v-if="tab == 1" class="mt-4">
+								<v-text-field
+									v-if="!showRecoverMnemonic"
+									:label="t('mnemonicInput')"
+									:type="'password'"
+									multi-line
+									height="128px"
+									:error-messages="errorRecoverMnemonic"
+									dark
+									outlined
+									background-color="#333"
+									v-model="recoverMnemonic"
+								/>
+								<v-textarea
+									v-if="showRecoverMnemonic"
+									:label="t('mnemonicInput')"
+									readonly
+									rows="3"
+									:error-messages="errorRecoverMnemonic"
+									dark
+									outlined
+									background-color="#333"
+									v-model="recoverMnemonic"
+								/>
+								<v-btn
+									color="point"
+									dark
+									outlined
+									@click="showRecoverMnemonic = !showRecoverMnemonic">
+									{{ showRecoverMnemonic ? t('hideMnemonic') : t('showMnemonic') }}
+								</v-btn>
+							</div>
             </v-col>
           </v-row>
 
@@ -89,6 +145,8 @@ export default defineComponent({
 		errorRecoverMnemonic: string | null;
 		wallet: Raw<HDNodeWallet> | null;
 		loading: boolean;
+		showMnemonic: boolean;
+		showRecoverMnemonic: boolean;
 	} {
 		return {
 			checks: [false, false],
@@ -98,6 +156,8 @@ export default defineComponent({
 			errorRecoverMnemonic: null,
 			wallet: null,
 			loading: false,
+			showMnemonic: false,
+			showRecoverMnemonic: false,
 		};
 	},
 	computed: {
