@@ -128,6 +128,9 @@
    "showPk": {
       "message": "Show PrivateKey"
    },
+   "hidePk": {
+      "message": "Hide PrivateKey"
+   },
    "showPkDesc": {
       "message": "If your private key is leaked, your account may be hacked. The service does not ask for your private key under any circumstances."
    },
@@ -148,5 +151,11 @@
    },
    "bridgeWNCGDesc5": {
       "message": "If failure, it is returned to the sender's account."
+   },
+   "showMnemonic": {
+      "message": "Show Seed Phrase"
+   },
+   "hideMnemonic": {
+      "message": "Hide Seed Phrase"
    }
 }

@@ -37,7 +37,38 @@
             <v-file-input v-if="imports.importType == 'json'" label="Private Key File" v-model="imports.jsonFile" />
             <v-text-field type="password" v-if="imports.importType == 'json'" color="pointyellow" :rules="requiredRule" :error-messages="imports.error" class="point-input" filled dense rows="4" label="Passphrase" v-model="imports.jsonPassphrase" />
 
-            <v-textarea v-if="imports.importType == 'raw'" color="pointyellow" :rules="requiredRule" :error-messages="imports.error" class="point-input" filled dense rows="4" label="Private Key" v-model="imports.privateKey"></v-textarea>
+						<v-text-field
+							v-if="imports.importType == 'raw' && !imports.showPrivateKey"
+							:type="'password'"
+							color="pointyellow"
+							:rules="requiredRule"
+							:error-messages="imports.error"
+							class="point-input"
+							filled
+							dense
+							rows="4"
+							label="Private Key"
+							v-model="imports.privateKey"
+						/>
+            <v-textarea
+							v-if="imports.importType == 'raw' && imports.showPrivateKey"
+							color="pointyellow"
+							:rules="requiredRule"
+							:error-messages="imports.error"
+							class="point-input"
+							filled
+							dense
+							rows="4"
+							label="Private Key"
+							v-model="imports.privateKey"
+						/>
+						<v-btn
+							color="point"
+							dark
+							outlined
+							@click="imports.showPrivateKey = !imports.showPrivateKey">
+							{{ imports.showPrivateKey ? t('hidePk') : t('showPk') }}
+						</v-btn>
           </div>
         </template>
         <v-card-actions class="justify-space-between">
@@ -140,6 +171,7 @@ export default defineComponent({
 				dialog: false,
 				accountName: "",
 				privateKey: "",
+				showPrivateKey: false,
 				error: null as string | null,
 				importType: "raw",
 				jsonFile: undefined as File | undefined,
