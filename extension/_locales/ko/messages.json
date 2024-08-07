@@ -148,5 +148,11 @@
    },
    "bridgeWNCGDesc5": {
       "message": "전송실패시 전송자 계정으로 반환됩니다."
+   },
+   "showMnemonic": {
+      "message": "시드 구문 보기"
+   },
+   "hideMnemonic": {
+      "message": "시드 구문 가리기"
    }
 }

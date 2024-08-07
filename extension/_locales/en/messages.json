@@ -148,5 +148,11 @@
    },
    "bridgeWNCGDesc5": {
       "message": "If failure, it is returned to the sender's account."
+   },
+   "showMnemonic": {
+      "message": "Show Seed Phrase"
+   },
+   "hideMnemonic": {
+      "message": "Hide Seed Phrase"
    }
 }
