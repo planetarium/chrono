@@ -10,4 +10,4 @@ If you're using Chrome, you can install at Chrome Web Store
 - [Development Build][Chrome Web Store Link]
 
 [Chrome Web Store]: https://chromewebstore.google.com/
-[Chrome Web Store Link]: https://chromewebstore.google.com/detail/chrono/aebhdpgiljdcefojiedcafoljbblegde
+[Chrome Web Store Link]: https://chromewebstore.google.com/detail/chrono-development-build/gcloogpfjklfhgfddenekamfjgbcklic
