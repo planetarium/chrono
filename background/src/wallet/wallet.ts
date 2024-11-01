@@ -5,8 +5,10 @@ import {
 	TXS,
 	ACCOUNTS,
 	Account,
+	ACCOUNT_TYPE_WEB3,
+	ACCOUNT_TYPE_KMS,
 } from "../constants/constants";
-import { RawPrivateKey } from "@planetarium/account";
+import { Account as Signer, RawPrivateKey, PublicKey } from "@planetarium/account";
 import {
 	BencodexDictionary,
 	Value,
@@ -16,6 +18,7 @@ import {
 } from "@planetarium/bencodex";
 import * as ethers from "ethers";
 import { Address } from "@planetarium/account";
+import { AwsKmsAccount, KMSClient } from "@planetarium/account-aws-kms";
 import {
 	UnsignedTx,
 	encodeSignedTx,
@@ -95,6 +98,7 @@ export default class Wallet {
 			"getPublicKey",
 			"connect",
 			"isConnected",
+			"checkKMSAccount",
 		];
 	}
 
@@ -126,6 +130,7 @@ export default class Wallet {
 	}
 
 	canCallExternal(method: string): boolean {
+		console.log("@@@@:" + method);
 		return this.canCall.indexOf(method) >= 0;
 	}
 	hexToBuffer(hex: string): Buffer {
@@ -143,21 +148,22 @@ export default class Wallet {
 		);
 	}
 	async createSequentialWallet(primaryAddress: string, index: number) {
-		const wallet = await this.loadWallet(
-			primaryAddress,
-			resolve(this.passphrase),
-		);
+        const stored = await this.storage.secureGet(ENCRYPTED_WALLET + primaryAddress.toLowerCase());
+        const { accountType, accountData } = Array.isArray(stored)
+            ? { accountType: stored[0], accountData: stored[1] }
+            : { accountType: ACCOUNT_TYPE_WEB3, accountData: stored };
 
-		const mnemonic = wallet._mnemonic().phrase;
+        if (accountType === ACCOUNT_TYPE_WEB3) {
+            const wallet = ethers.Wallet.fromEncryptedJsonSync(accountData, resolve(this.passphrase));
+            const mnemonic = wallet._mnemonic().phrase;
+            const newWallet = ethers.Wallet.fromMnemonic(mnemonic, "m/44'/60'/0'/0/" + index);
+            const encryptedWallet = await newWallet.encrypt(resolve(this.passphrase));
+            const address = newWallet.address;
 
-		const newWallet = ethers.Wallet.fromMnemonic(
-			mnemonic,
-			"m/44'/60'/0'/0/" + index,
-		);
-		const encryptedWallet = await newWallet.encrypt(resolve(this.passphrase));
-		const address = newWallet.address;
-
-		return { address, encryptedWallet };
+            return { address, encryptedWallet };
+        } else {
+            throw new Error("Can't derive new wallet from non Web3 account.");
+        }
 	}
 	async createPrivateKeyWallet(privateKey: string): Promise<{
 		address: string;
@@ -169,18 +175,8 @@ export default class Wallet {
 
 		return { address, encryptedWallet };
 	}
-	async loadWallet(
-		address: string,
-		passphrase: string,
-	): Promise<ethers.Wallet> {
-		const encryptedWallet = await this.storage.secureGet<string>(
-			ENCRYPTED_WALLET + address.toLowerCase(),
-		);
-		return this.decryptWallet(encryptedWallet, passphrase);
-	}
 	async _transferNCG(sender, receiver, amount, nonce, memo?) {
-		const wallet = await this.loadWallet(sender, resolve(this.passphrase));
-		const account = RawPrivateKey.fromHex(wallet.privateKey.slice(2));
+		const signer = await this.getSigner(sender, resolve(this.passphrase));
 		const currentNetwork = await this.networkController.getCurrentNetwork();
 		const genesisHash = Buffer.from(currentNetwork.genesisHash, "hex");
 		const action = new TransferAsset({
@@ -196,13 +192,13 @@ export default class Wallet {
 			updatedAddresses: new Set([]),
 			nonce: BigInt(nonce),
 			genesisHash,
-			publicKey: (await account.getPublicKey()).toBytes("uncompressed"),
+			publicKey: (await signer.getPublicKey()).toBytes("uncompressed"),
 			timestamp: new Date(),
 			maxGasPrice: fav(MEAD, 1),
 			gasLimit: 4n,
 		};
 
-		const signedTx = await signTx(unsignedTx, account);
+		const signedTx = await signTx(unsignedTx, signer);
 		const encodedHex = Buffer.from(encode(encodeSignedTx(signedTx))).toString(
 			"hex",
 		);
@@ -236,7 +232,7 @@ export default class Wallet {
 		return result;
 	}
 
-	async sign(signer: string, actionHex: string): Promise<string> {
+	async sign(signerAddress: string, actionHex: string): Promise<string> {
 		const action = decode(Buffer.from(actionHex, "hex"));
 		if (!isDictionary(action)) {
 			throw new Error("Invalid action. action must be BencodexDictionary.");
@@ -246,14 +242,13 @@ export default class Wallet {
 			.request({
 				category: "sign",
 				data: {
-					signer,
+					signerAddress,
 					content: convertBencodexToJSONableType(action),
 				},
 			})
 			.then(async () => {
-				const wallet = await this.loadWallet(signer, resolve(this.passphrase));
-				const account = RawPrivateKey.fromHex(wallet.privateKey.slice(2));
-				const sender = Address.fromHex(wallet.address);
+				const signer = await this.getSigner(signerAddress, resolve(this.passphrase));
+				const sender = Address.fromHex(signerAddress);
 				const currentNetwork = await this.networkController.getCurrentNetwork();
 				const genesisHash = Buffer.from(currentNetwork.genesisHash, "hex");
 
@@ -270,7 +265,7 @@ export default class Wallet {
 					updatedAddresses: new Set([]),
 					nonce: BigInt(await this.api.getNextTxNonce(sender.toString())),
 					genesisHash,
-					publicKey: (await account.getPublicKey()).toBytes("uncompressed"),
+					publicKey: (await signer.getPublicKey()).toBytes("uncompressed"),
 					timestamp: new Date(),
 					maxGasPrice: fav(MEAD, 1),
 					gasLimit,
@@ -281,7 +276,7 @@ export default class Wallet {
 			});
 	}
 
-	async signTx(signer: string, encodedUnsignedTxHex: string): Promise<string> {
+	async signTx(signerAddress: string, encodedUnsignedTxHex: string): Promise<string> {
 		const encodedUnsignedTxBytes = Buffer.from(encodedUnsignedTxHex, "hex");
 		const encodedUnsignedTx = decode(encodedUnsignedTxBytes);
 
@@ -289,9 +284,8 @@ export default class Wallet {
 			throw new Error("Invalid unsigned tx");
 		}
 
-		const wallet = await this.loadWallet(signer, resolve(this.passphrase));
-		const account = RawPrivateKey.fromHex(wallet.privateKey);
-		const signature = await account.sign(encodedUnsignedTxBytes);
+		const signer = await this.getSigner(signerAddress, resolve(this.passphrase));
+		const signature = await signer.sign(encodedUnsignedTxBytes);
 
 		const SIGNATURE_KEY = new Uint8Array([83]);
 		const encodedSignedTx = new BencodexDictionary([
@@ -302,11 +296,10 @@ export default class Wallet {
 		return Buffer.from(encode(encodedSignedTx)).toString("hex");
 	}
 
-	async _signTx(signer, unsignedTx) {
-		const wallet = await this.loadWallet(signer, resolve(this.passphrase));
-		const account = RawPrivateKey.fromHex(wallet.privateKey.slice(2));
+	async _signTx(signerAddress, unsignedTx) {
+		const signer = await this.getSigner(signerAddress, resolve(this.passphrase));
 
-		return await signTx(unsignedTx, account);
+		return await signTx(unsignedTx, signer);
 	}
 
 	async addPendingTxs(tx) {
@@ -321,8 +314,13 @@ export default class Wallet {
 	}
 
 	async getPrivateKey(address: string, passphrase): Promise<string> {
-		let wallet = await this.loadWallet(address, passphrase);
-		return wallet.privateKey;
+		const signer = await this.getSigner(address, passphrase);
+
+		if (signer instanceof RawPrivateKey) {
+			return Buffer.from((await signer.exportPrivateKey()).toBytes()).toString("hex");
+		}
+
+		throw new Error("Can't export private key from other than RawPrivateKey account type.");
 	}
 
 	async connect(): Promise<string[]> {
@@ -365,8 +363,60 @@ export default class Wallet {
 	}
 
 	async getPublicKey(address: string): Promise<string> {
-		const wallet = await this.loadWallet(address, resolve(this.passphrase));
-		return wallet.publicKey;
+		const signer = await this.getSigner(address, resolve(this.passphrase));
+		return (await signer.getPublicKey()).toHex("uncompressed");
+	}
+
+	async checkKMSAccount(
+		keyId,
+		publicKeyHex,
+		region,
+		accessKeyId,
+		secretAccessKey
+	  ): Promise<string> {
+		const account = createAwsKmsAccount(
+			keyId,
+			publicKeyHex,
+			region,
+			accessKeyId,
+			secretAccessKey
+		);
+
+	    return (await account.getAddress()).toHex();
+	  }
+
+	  async getSigner(address, passphrase): Promise<Signer> {
+		const stored = await this.storage.secureGet(
+			ENCRYPTED_WALLET + address.toLowerCase()
+		);
+		const { accountType, accountData } = Array.isArray(stored)
+			? { accountType: stored[0], accountData: stored[1] }
+			: { accountType: ACCOUNT_TYPE_WEB3, accountData: stored };
+
+		switch (accountType) {
+			case ACCOUNT_TYPE_WEB3:
+			const wallet = ethers.Wallet.fromEncryptedJsonSync(
+				accountData,
+				passphrase
+			);
+
+			return RawPrivateKey.fromHex(wallet.privateKey.slice(2));
+
+			case ACCOUNT_TYPE_KMS:
+			const [keyId, publicKeyHex, region, accessKeyId, secretAccessKey] =
+				accountData;
+
+			return createAwsKmsAccount(
+				keyId,
+				publicKeyHex,
+				region,
+				accessKeyId,
+				secretAccessKey
+			);
+
+			default:
+				break;
+		}
 	}
 }
 
@@ -402,4 +452,27 @@ function convertBencodexToJSONableType(v: Value) {
 	}
 
 	return v;
+}
+
+function createAwsKmsAccount(
+	keyId,
+	publicKeyHex,
+	region,
+	accessKeyId,
+	secretAccessKey
+)
+{
+	const kmsClient = new KMSClient({
+		region,
+		credentials: {
+			accessKeyId,
+			secretAccessKey
+		}
+	});
+	const publicKey = PublicKey.fromHex(
+		publicKeyHex,
+		publicKeyHex.startsWith("04") ? "uncompressed" : "compressed"
+	);
+
+	return new AwsKmsAccount(keyId, publicKey, kmsClient);
 }

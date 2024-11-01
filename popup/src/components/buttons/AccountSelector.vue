@@ -24,6 +24,7 @@
         <div class="w-100 d-flex flex-wrap">
           <v-btn size="small" variant="text" color="point" class="flex-fill" @click="addNewAddress">Add New</v-btn>
           <v-btn size="small" variant="text" color="point" class="flex-fill" @click="importAddress">Import</v-btn>
+          <v-btn size="small" variant="text" color="point" class="flex-fill" @click="importKMSAddress">Import(AWS/KMS)</v-btn>
         </div>
       </v-list-item>
     </v-list>
@@ -90,6 +91,9 @@ export default defineComponent({
 		},
 		importAddress() {
 			this.$emit("import");
+		},
+		importKMSAddress() {
+			this.$emit('importKMS');
 		},
 		editAccount(account: Account) {
 			this.$emit("edit", account);

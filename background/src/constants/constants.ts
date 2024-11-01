@@ -10,6 +10,8 @@ export const NETWORKS = "n";
 export const CURRENT_NETWORK = "cn";
 export const PASSWORD_CHECKER = "passwordChecker";
 export const PASSWORD_CHECKER_VALUE = "password";
+export const ACCOUNT_TYPE_WEB3 = 'web3-secret-storage'
+export const ACCOUNT_TYPE_KMS = 'kms'
 
 export interface Account {
 	name: string;
