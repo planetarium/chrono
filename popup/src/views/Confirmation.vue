@@ -6,7 +6,7 @@
       <p class="content text-start">{{ approvalRequests[0].category }}</p>
       <div v-if:="approvalRequests[0].category == 'sign'">
         <p class="header text-start">Signer</p>
-        <p class="content text-start">{{ approvalRequests[0].data.signer }}</p>
+        <p class="content text-start">{{ approvalRequests[0].data.signerAddress }}</p>
         <p class="header text-start">Action</p>
         <pre class="content text-start">{{ JSON.stringify(approvalRequests[0].data.content, null, 2) }}</pre>
         <div class="d-flex">
