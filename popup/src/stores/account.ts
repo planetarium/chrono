@@ -3,6 +3,8 @@ import { defineStore } from "pinia";
 import bg from "@/api/background";
 import {
 	ACCOUNTS,
+	ACCOUNT_TYPE_KMS,
+	ACCOUNT_TYPE_WEB3,
 	CURRENT_ADDRESS,
 	ENCRYPTED_WALLET,
 	PASSWORD_CHECKER,
@@ -77,7 +79,7 @@ export const useAccounts = defineStore("Account", () => {
 			bg.storage.set(ACCOUNTS, [
 				{ name: "Account 1", index: 0, address, primary: true },
 			]),
-			bg.storage.secureSet(ENCRYPTED_WALLET + address.toLowerCase(), ew),
+			bg.storage.secureSet(ENCRYPTED_WALLET + address.toLowerCase(), [ACCOUNT_TYPE_WEB3, ew]),
 		]);
 
 		await loadAccounts();
@@ -148,6 +150,41 @@ export const useAccounts = defineStore("Account", () => {
 			}
 		} else {
 			throw Error;
+		}
+	}
+	async function importKMSAccount(accountName: string, kmsConfig: string) {
+		await assertSignedIn();
+		if (accountName && kmsConfig) {
+			const parsedConfig = JSON.parse(kmsConfig);
+			const [
+				keyId,
+				publicKeyHex,
+				region,
+				accessKeyId,
+				secretAccessKey
+			] = parsedConfig;
+			const address = await bg.wallet.checkKMSAccount(
+				keyId,
+				publicKeyHex,
+				region,
+				accessKeyId,
+				secretAccessKey
+			);
+
+			const accounts = await getAccounts();
+			accounts.push({
+				name: accountName,
+				index: 0,
+				address,
+				imported: true
+			})
+			await bg.storage.set(ACCOUNTS, accounts)
+			await bg.storage.secureSet(
+				ENCRYPTED_WALLET + address.toLowerCase(),
+				[ACCOUNT_TYPE_KMS, parsedConfig]
+			)
+			await loadAccounts();
+			await selectAccount(address);
 		}
 	}
 	async function loadAccounts() {
@@ -272,6 +309,7 @@ export const useAccounts = defineStore("Account", () => {
 		createNewAccount,
 		deleteAccount,
 		importAccount,
+		importKMSAccount,
 		loadAccounts,
 		updateAccountName,
 	};

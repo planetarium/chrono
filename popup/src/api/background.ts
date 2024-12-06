@@ -132,6 +132,9 @@ export default {
 		getPublicKey: async (address: string) => {
 			return await callWallet<string>("getPublicKey", [address]);
 		},
+		checkKMSAccount: async (keyId: string, publicKeyHex: string, region: string, accessKeyId: string, secretAccessKey: string) => {
+			return await callWallet<string>('checkKMSAccount', [keyId, publicKeyHex, region, accessKeyId, secretAccessKey]);
+		}
 	},
 	network: {
 		switchNetwork: (id: string) => {

@@ -50,7 +50,7 @@ export type ApprovalRequest =
 			id: string;
 			category: "sign";
 			data: {
-				signer: string;
+				signerAddress: string;
 				content: object;
 			};
 	  };

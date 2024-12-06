@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex justify-space-between align-center px-3 py-2" v-if="account">
     <div>
-      <account-selector :accounts="accounts" :account="account" @addNew="openDialog('AddNewAccount')" @import="openDialog('ImportAccount')" @edit="editAccount"></account-selector>
+      <account-selector :accounts="accounts" :account="account" @addNew="openDialog('AddNewAccount')" @import="openDialog('ImportAccount')" @edit="editAccount" @importKMS="openDialog('ImportKMSAccount')"></account-selector>
     </div>
     <div v-if="network === null"></div>
     <div class="hex account-address grey--text d-flex align-center" v-else>
@@ -80,6 +80,22 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+	<v-dialog v-model="kmsImports.dialog" theme="dark" scroll-strategy="reposition" max-width="320px">
+		<v-card :title="t('importKMSAccount')">
+			<v-card-text class="mt-4">
+			<v-text-field maxlength="16" outlined :rules="requiredRule" dense label="Account Name" v-model="kmsImports.accountName" style="margin-bottom:-10px;"></v-text-field>
+			<v-textarea color="pointyellow" :rules="requiredRule" :error-messages="kmsImports.error" class="point-input" filled dense rows="4" label="AWS KMS Config (JSON)" v-model="kmsImports.kmsConfig"></v-textarea>
+			</v-card-text>
+			<v-card-actions class="justify-space-between">
+			<div></div>
+			<div>
+				<v-btn variant="text" size="small" @click="kmsImports.dialog = false" :disabled="kmsImports.loading">{{ t('cancel') }}</v-btn>
+				<v-btn size="small" color="pointyellow" @click="importKMSAccount" :loading="kmsImports.loading">{{ t('import') }}</v-btn>
+			</div>
+			</v-card-actions>
+		</v-card>
+	</v-dialog>
 
     <v-dialog v-model="detail.dialog" theme="dark" scroll-strategy="reposition" dark max-width="320px">
       <v-card :title="t('accountInfo')">
@@ -177,6 +193,13 @@ export default defineComponent({
 				jsonFile: undefined as File | undefined,
 				jsonPassphrase: "",
 			},
+			kmsImports: {
+				loading: false,
+				dialog: false,
+				accountName: '',
+				kmsConfig: '',
+				error: null as string | null,
+			},
 			detail: {
 				dialog: false,
 			},
@@ -219,6 +242,10 @@ export default defineComponent({
 				this.imports.jsonFile = undefined;
 				this.imports.jsonPassphrase = "";
 				this.imports.dialog = true;
+			} else if (type === 'ImportKMSAccount') {
+				this.kmsImports.accountName = 'Account ' + (this.accounts.length + 1);
+				this.kmsImports.kmsConfig = '';
+				this.kmsImports.dialog = true;
 			}
 		},
 		editAccount(account: Account) {
@@ -310,6 +337,23 @@ export default defineComponent({
 				this.imports.error = "Invalid Private Key";
 			}
 			this.imports.loading = false;
+		},
+
+		async importKMSAccount() {
+			const accountName = this.kmsImports.accountName.trim();
+			const kmsConfig = this.kmsImports.kmsConfig;
+			if (!accountName || !kmsConfig) {
+				return
+			}
+			this.kmsImports.error = null;
+			this.kmsImports.loading = true;
+			try {
+				await this.AccountStore.importKMSAccount(accountName, kmsConfig);
+				this.kmsImports.dialog = false;
+			} catch (e) {
+				this.kmsImports.error = "Can't import AWS/KMS account";
+			}
+			this.kmsImports.loading = false;
 		},
 
 		/**
