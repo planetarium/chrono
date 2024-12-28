@@ -20,14 +20,14 @@
   "author": "Planetarium",
   "license": "GPL-3.0-only",
   "devDependencies": {
-    "@planetarium/lib9c": "npm:@jsr/planetarium__lib9c@^0.3.0-dev.202407170506408289+2af04aea533872ccba4f01c583b2e53694d2e18e",
+    "@planetarium/lib9c": "npm:@jsr/planetarium__lib9c@^0.5.0",
     "@types/react": "^18.2.66",
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@planetarium/account": "~4.4.2",
+    "@planetarium/account": "^5.4.2",
     "@planetarium/bencodex": "^0.2.2",
-    "@planetarium/tx": "^4.4.2",
+    "@planetarium/tx": "^5.4.2",
     "@tanstack/react-query": "^5.37.1",
     "buffer": "^6.0.3",
     "react": "^18.2.0"
