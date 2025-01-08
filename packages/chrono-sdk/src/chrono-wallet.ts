@@ -90,10 +90,20 @@ export class ChronoWallet {
      * @returns A promise that resolves Buffer instance containing the serialized result of the signed transaction.
      */
     sign(signer: Address, action: PolymorphicAction): Promise<Buffer> {
+        return this.signWithPlainValue(signer, Buffer.from(action.serialize()).toString("hex"));
+    }
+
+    /**
+     * Sign an unsigned transaction built with selected network and the given `plainValue`, with `signer`s private key.
+     * @param signer The address to sign. The address must be connected by `connect` process.
+     * @param plainValue The plain value of the action used to build unsigned transaction.
+     * @returns A promise that resolves Buffer instance containing the serialized result of the signed transaction.
+     */
+    signWithPlainValue(signer: Address, plainValue: string): Promise<Buffer> {
         return new Promise((resolve, reject) => {
             this.handler.send(
                 { resolve: (value: string) => resolve(Buffer.from(value, "hex")), reject },
-                { method: 'sign', signer: signer.toString(), action: Buffer.from(action.serialize()).toString("hex") }
+                { method: 'sign', signer: signer.toString(), action: plainValue }
             );
         });
     }
