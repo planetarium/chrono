@@ -271,7 +271,7 @@ export default class Wallet {
 					gasLimit,
 				};
 
-				const signedTx = await this._signTx(signer, unsignedTx);
+				const signedTx = await signTx(unsignedTx, signer);
 				return Buffer.from(encode(encodeSignedTx(signedTx))).toString("hex");
 			});
 	}
@@ -296,7 +296,7 @@ export default class Wallet {
 		return Buffer.from(encode(encodedSignedTx)).toString("hex");
 	}
 
-	async _signTx(signerAddress, unsignedTx) {
+	async _signTx(signerAddress: string, unsignedTx: UnsignedTx) {
 		const signer = await this.getSigner(signerAddress, resolve(this.passphrase));
 
 		return await signTx(unsignedTx, signer);
@@ -313,7 +313,7 @@ export default class Wallet {
 		await this.storage.set(TXS + tx.signer.toLowerCase(), txs.splice(0, 100));
 	}
 
-	async getPrivateKey(address: string, passphrase): Promise<string> {
+	async getPrivateKey(address: string, passphrase: string): Promise<string> {
 		const signer = await this.getSigner(address, passphrase);
 
 		if (signer instanceof RawPrivateKey) {
@@ -385,7 +385,7 @@ export default class Wallet {
 	    return (await account.getAddress()).toHex();
 	  }
 
-	  async getSigner(address, passphrase): Promise<Signer> {
+	  async getSigner(address: string, passphrase: string): Promise<Signer> {
 		const stored = await this.storage.secureGet(
 			ENCRYPTED_WALLET + address.toLowerCase()
 		);
