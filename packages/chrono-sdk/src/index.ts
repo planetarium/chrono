@@ -18,3 +18,5 @@ export function setupChronoSdk() {
 export function getChronoSdk(): ChronoWallet | undefined {
     return (window as any).chronoWallet;
 }
+
+export type { ChronoWallet } from './chrono-wallet'
