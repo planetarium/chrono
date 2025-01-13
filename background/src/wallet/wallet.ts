@@ -194,7 +194,7 @@ export default class Wallet {
 			genesisHash,
 			publicKey: (await signer.getPublicKey()).toBytes("uncompressed"),
 			timestamp: new Date(),
-			maxGasPrice: fav(MEAD, 1),
+			maxGasPrice: fav(MEAD, 0.00001),
 			gasLimit: 4n,
 		};
 
@@ -267,7 +267,7 @@ export default class Wallet {
 					genesisHash,
 					publicKey: (await signer.getPublicKey()).toBytes("uncompressed"),
 					timestamp: new Date(),
-					maxGasPrice: fav(MEAD, 1),
+					maxGasPrice: fav(MEAD, 0.00001),
 					gasLimit,
 				};
 
