@@ -130,7 +130,6 @@ export default class Wallet {
 	}
 
 	canCallExternal(method: string): boolean {
-		console.log("@@@@:" + method);
 		return this.canCall.indexOf(method) >= 0;
 	}
 	hexToBuffer(hex: string): Buffer {
@@ -175,19 +174,20 @@ export default class Wallet {
 
 		return { address, encryptedWallet };
 	}
-	async _transferNCG(sender, receiver, amount, nonce, memo?) {
+	async _transferNCG(sender: string, receiver: string, amount: number, nonce: number, memo?: string) {
 		const signer = await this.getSigner(sender, resolve(this.passphrase));
 		const currentNetwork = await this.networkController.getCurrentNetwork();
 		const genesisHash = Buffer.from(currentNetwork.genesisHash, "hex");
+		const senderAsAddress = Address.fromHex(sender, true);
 		const action = new TransferAsset({
-			sender: Address.fromHex(sender, true),
+			sender: senderAsAddress,
 			recipient: Address.fromHex(receiver, true),
 			amount: fav(NCG, amount),
 			memo,
 		});
 
 		const unsignedTx: UnsignedTx = {
-			signer: sender.toBytes(),
+			signer: senderAsAddress.toBytes(),
 			actions: [action.bencode()],
 			updatedAddresses: new Set([]),
 			nonce: BigInt(nonce),
