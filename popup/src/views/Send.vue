@@ -64,7 +64,7 @@
     </div>
 
     <div v-if="!account">Account Loading</div>
-    <v-dialog v-else dark v-model="confirmDialog" fullscreen>
+    <v-dialog v-else dark v-model="confirmDialog" scroll-strategy="reposition" fullscreen>
       <v-card>
         <v-card-title class="py-8">NCG {{t('transfer')}}</v-card-title>
         <v-card-text class="mt-4">
