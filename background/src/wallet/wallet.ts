@@ -22,7 +22,6 @@ import { AwsKmsAccount, KMSClient } from "@planetarium/account-aws-kms";
 import {
 	UnsignedTx,
 	encodeSignedTx,
-	encodeUnsignedTx,
 	signTx,
 } from "@planetarium/tx";
 import { Lazyable, resolve } from "../utils/lazy";
@@ -177,7 +176,7 @@ export default class Wallet {
 	async _transferNCG(sender: string, receiver: string, amount: number, nonce: number, memo?: string) {
 		const signer = await this.getSigner(sender, resolve(this.passphrase));
 		const currentNetwork = await this.networkController.getCurrentNetwork();
-		const genesisHash = Buffer.from(currentNetwork.genesisHash, "hex");
+		const genesisHash = Uint8Array.from(Buffer.from(currentNetwork.genesisHash, "hex"));
 		const senderAsAddress = Address.fromHex(sender, true);
 		const action = new TransferAsset({
 			sender: senderAsAddress,
@@ -207,7 +206,7 @@ export default class Wallet {
 		return { txId, endpoint };
 	}
 
-	async sendNCG(sender, receiver, amount, nonce) {
+	async sendNCG(sender: string, receiver: string, amount: number, nonce: number) {
 		const { txId, endpoint } = await this._transferNCG(
 			sender,
 			receiver,
@@ -233,7 +232,7 @@ export default class Wallet {
 	}
 
 	async sign(signerAddress: string, actionHex: string): Promise<string> {
-		const action = decode(Buffer.from(actionHex, "hex"));
+		const action = decode(Uint8Array.from(Buffer.from(actionHex, "hex")));
 		if (!isDictionary(action)) {
 			throw new Error("Invalid action. action must be BencodexDictionary.");
 		}
@@ -250,7 +249,7 @@ export default class Wallet {
 				const signer = await this.getSigner(signerAddress, resolve(this.passphrase));
 				const sender = Address.fromHex(signerAddress);
 				const currentNetwork = await this.networkController.getCurrentNetwork();
-				const genesisHash = Buffer.from(currentNetwork.genesisHash, "hex");
+				const genesisHash = Uint8Array.from(Buffer.from(currentNetwork.genesisHash, "hex"));
 
 				const actionTypeId = action.get("type_id");
 				const gasLimit =
@@ -277,7 +276,7 @@ export default class Wallet {
 	}
 
 	async signTx(signerAddress: string, encodedUnsignedTxHex: string): Promise<string> {
-		const encodedUnsignedTxBytes = Buffer.from(encodedUnsignedTxHex, "hex");
+		const encodedUnsignedTxBytes = Uint8Array.from(Buffer.from(encodedUnsignedTxHex, "hex"));
 		const encodedUnsignedTx = decode(encodedUnsignedTxBytes);
 
 		if (!isDictionary(encodedUnsignedTx)) {
@@ -285,7 +284,7 @@ export default class Wallet {
 		}
 
 		const signer = await this.getSigner(signerAddress, resolve(this.passphrase));
-		const signature = await signer.sign(encodedUnsignedTxBytes);
+		const signature = await signer.sign(Uint8Array.from(encodedUnsignedTxBytes));
 
 		const SIGNATURE_KEY = new Uint8Array([83]);
 		const encodedSignedTx = new BencodexDictionary([
